@@ -1,23 +1,47 @@
-const express = require('express'); // Importa Express
-const router = express.Router(); // Crea un enrutador de Express
-const resenaController = require('../controllers/resenaController'); // Importa el controlador de Reseñas
+const express = require('express');
+const router = express.Router();
+const Reseña = require('../models/Resena');
 
-// Rutas CRUD para Reseñas (Endpoints: /api/resenas)
 
-// POST /api/resenas - Crear una nueva reseña
-router.post('/', resenaController.crearResena);
+// GET todas las reseñas
+router.get('/', async (req, res) => {
+  try {
+    const reseñas = await Reseña.find();
+    res.json(reseñas);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener reseñas' });
+  }
+});
 
-// GET /api/resenas - Obtener todas las reseñas
-router.get('/', resenaController.obtenerResenas);
+// POST nueva reseña
+router.post('/', async (req, res) => {
+  try {
+    const nuevaReseña = new Reseña(req.body);
+    const reseñaGuardada = await nuevaReseña.save();
+    res.status(201).json(reseñaGuardada);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al agregar reseña', details: err.message });
+  }
+});
 
-// GET /api/resenas/:id - Obtener una reseña por su ID
-router.get('/:id', resenaController.obtenerResenaPorId);
+// PUT editar reseña
+router.put('/:id', async (req, res) => {
+  try {
+    const reseñaActualizada = await Reseña.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(reseñaActualizada);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al editar reseña', details: err.message });
+  }
+});
 
-// PUT /api/resenas/:id - Actualizar una reseña por su ID
-router.put('/:id', resenaController.actualizarResena);
+// DELETE eliminar reseña
+router.delete('/:id', async (req, res) => {
+  try {
+    await Reseña.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: 'Reseña eliminada correctamente' });
+  } catch (err) {
+    res.status(400).json({ error: 'Error al eliminar reseña', details: err.message });
+  }
+});
 
-// DELETE /api/resenas/:id - Eliminar una reseña por su ID
-router.delete('/:id', resenaController.eliminarResena);
-
-// Exporta el router para usarlo en app.js
 module.exports = router;

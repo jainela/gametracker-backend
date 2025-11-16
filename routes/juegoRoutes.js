@@ -1,23 +1,49 @@
-const express = require('express'); // Importa Express
-const router = express.Router(); // Crea un enrutador de Express
-const juegoController = require('../controllers/juegoController'); // Importa el controlador de Juegos
+const express = require('express');
+const router = express.Router();
+const Juego = require('../models/Juego');
 
-// Rutas CRUD para Juegos (Endpoints: /api/juegos)
+// GET todos los juegos
+router.get('/', async (req, res) => {
+  try {
+    const juegos = await Juego.find();
+    res.json(juegos);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener juegos' });
+  }
+});
 
-// POST /api/juegos - Crear un nuevo juego
-router.post('/', juegoController.crearJuego);
+// POST nuevo juego
+router.post('/', async (req, res) => {
+  try {
+    const nuevoJuego = new Juego(req.body);
+    const juegoGuardado = await nuevoJuego.save();
+    res.status(201).json(juegoGuardado);
+  } catch (err) {
+    res.status(400).json({
+      error: 'Error al agregar juego. Verifique campos',
+      details: err.message
+    });
+  }
+});
 
-// GET /api/juegos - Obtener todos los juegos
-router.get('/', juegoController.obtenerJuegos);
+// PUT editar juego
+router.put('/:id', async (req, res) => {
+  try {
+    const juegoActualizado = await Juego.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(juegoActualizado);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al editar juego', details: err.message });
+  }
+});
 
-// GET /api/juegos/:id - Obtener un juego por su ID
-router.get('/:id', juegoController.obtenerJuegoPorId);
+// DELETE eliminar juego
+router.delete('/:id', async (req, res) => {
+  try {
+    await Juego.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: 'Juego eliminado correctamente' });
+  } catch (err) {
+    res.status(400).json({ error: 'Error al eliminar juego', details: err.message });
+  }
+});
 
-// PUT /api/juegos/:id - Actualizar un juego por su ID
-router.put('/:id', juegoController.actualizarJuego);
-
-// DELETE /api/juegos/:id - Eliminar un juego por su ID
-router.delete('/:id', juegoController.eliminarJuego);
-
-// Exporta el router para usarlo en app.js
 module.exports = router;
